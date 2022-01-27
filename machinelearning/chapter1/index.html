@@ -10,17 +10,10 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@latest/lib/themes/vue.css">
   <script src="https://cdn.jsdelivr.net/npm/katex-copytex@1.0.2/dist/katex-copytex.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/katex-copytex@1.0.2/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
-  <link href="../assets/css/fontawesome-all.min.css" rel="stylesheet" type="text/css">
-  
 </head>
 
 <body>
-  <!-- <nav>
-    <a href="#/" class="fas fa-envelope"><span class="fas fa-envelope"></span>主页</a>
-    <a href="#/zh-cn/">中文</a>
-  </nav> -->
   <div id="app"></div>
-
   <script src="//cdn.jsdelivr.net/npm/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
   <script>
     mermaid.initialize({
@@ -28,19 +21,13 @@
     });
     let id = 0;
     window.$docsify = {
-      name: '机器学习',
-      repo: 'https://github.com/limingluo',
-      logo: 'images/ml.jpg',
-      search: {
+      name: 'docsify-katex',
+      repo: 'https://github.com/upupming/docsify-katex',
 
-      placeholder: '🔍 搜索',
-      noData: '😒 找不到结果'
-    },
       loadSidebar: true,
       maxLevel: 4,
       subMaxLevel: 3,
-      loadNavbar: true,
-
+      noEmoji: true,
 
       markdown: {
         renderer: {
@@ -55,16 +42,11 @@
         }
       }
     }
-    
   </script>
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-  <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
   <script src="../dist/docsify-katex.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
   <script src="//cdn.jsdelivr.net/npm/docsify@latest/lib/docsify.min.js"></script>
-
+  <script src="//cdn.jsdelivr.net/npm/docsify@latest/lib/plugins/search.min.js"></script>
 </body>
 
 </html>
