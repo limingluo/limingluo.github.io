@@ -6,5 +6,6 @@
 * [数据收集与准备 Data Collection and Preparation](chapter3/)
 * [模型训练 Model Training](chapter4/)
     * [线性回归 Linear Regression](chapter4/linearregression/README.md)
+    * [逻辑回归 Logistic Regression](chapter4/logisticregression/README.md)
 
 
