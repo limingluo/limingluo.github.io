@@ -1,123 +1,153 @@
 # 引入
 
-感知机受到了生物神经元的启发，是用来解决***二分类问题***的一种线性模型，其目标是找到一个超平面，使其能够将全部的数据点进行**完美**的分类。
+解决二分类问题时，感知机和逻辑回归的方法是找到一个决定边界，当预测新样本时，通过判断新样本在决定边界的哪一侧来决定其分类。
 
-当数据只有一个特征时（一维），目标是找到一个**点**将所有的正例和负例区分。
+比如通过一个人的身高判断他是否是肥胖（一维特征），感知机要找到一个分界点来进行判断。
 
-![Untitled](images/README/Untitled.png)
+![Untitled](images/README/Untitled-164377741407210.png)
 
-当数据有两个特征时（二维），目标是找到一条**直线**将所有的正例和负例区分。
+通过一个人的身高和每周卡路里摄入来判断他是否肥胖（二维特征），感知机要找到一条分界线来进行判断。
 
-![Untitled](images/README/Untitled-16436856660651.png)
+![Untitled](images/README/Untitled-164377742945111.png)
 
-当数据有三个特征时（三维），目标是找到一个**平面**将所有的正例和负例区分。
+而如果我们假设两个类别的***特征都满足高斯分布***，就可以通过将新样本分别属于两个类别的概率进行比较，来判断其属于哪一类。
 
-![Untitled](images/README/Untitled-16436856805772.png)
+通过一个人的身高判断他是否是肥胖（一维特征），我们找到想要最能模拟数据分布的两个高斯分布，然后通过概率密度公式$P(x|y)=\frac{1}{\sigma \sqrt{2 \pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^{2}}$分别计算出新样本属于两个分布的概率，比较之后判断新样本属于哪一类。
 
-······
+![Untitled](images/README/Untitled-164377755773113.png)
 
-当数据有多个特征时，目标是找到一个**超平面**将所有的正例和负例区分。
+通过一个人的身高和每日摄入卡路里判断他是否是肥胖（二维特征），我们找到想要最能模拟数据分布的两个多维高斯分布，然后通过概率密度公式$P(x|y)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}$分别计算出新样本属于两个分布的概率，比较之后判断新样本属于哪一类。
 
-# 公式表达
+![Untitled](images/README/Untitled-164377757038914.png)
 
-给定一个有m个样本、d个特征的数据集$X=\{x^{(1)},x^{(2)},...,x^{(m)}\}$，$x^{(i)}=\{x_0^{(i)},x_1^{(i)},x_2^{(i)},...,x_d^{(i)}\}$，每一个特征都对应一个权重$w_0,w_1,...,w_d$，输出$y=\{0,1\}$
+所以现在的问题转化为已知两组数据，要分别求出最能拟合它们的高斯分布模型，我们可以用最大似然估计法来求这些参数。
 
-这个超平面应该如何表达呢？
+# 参数推导
 
-我们用$0=w^Tx$表示这个区分正例和负例的超平面的函数，对于每个特征，其权重越大表示其对我们要预测的结果影响越大
+## 高斯分布的参数推导 —— 最大似然估计
 
-在逻辑回归中，我们使用Sigmoid函数来让函数的值连续地落在(0,1)中以进行二分类，输出的结果是概率值
+给定一个训练集$X=\{x^{(1)},x^{(2)},...,x^{(m)}\}$，每个样本$x^{(i)}$有d个特征，分类标签$Y=\{0,1\}$
 
-感知机像是一个逻辑回归的硬分类版本，我们用符号函数（Sign Function）（有的使用单位阶越函数）来判断其分类，直接输出分类结果
+，则
 
-$s(x)=\left\{\begin{array}{l}
--1 \text { if } x<0 \\
-1 \text { if } x \geq 0
-\end{array}\right.$
+$P(x|y=1)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_1})^{\mathrm{T}} \mathbf{\Sigma_1}^{-1}(\mathbf{x}-\boldsymbol{\mu_1})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma_1}|}}$
 
-![Untitled](images/README/Untitled-16436856952463.png)
+$P(x|y=0)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_0})^{\mathrm{T}} \mathbf{\Sigma_0}^{-1}(\mathbf{x}-\boldsymbol{\mu_0})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma_0}|}}$
 
-当$w^Tx$小于0当时候，判断结果为负，当$w^Tx$大于或等于0时，判断结果为正
+根据$y=1$类别的样本，我们想要找到估计出最合适的参数$\mu_1,\Sigma$，则可以使用最大似然估计法
 
-这里的使用的函数叫做激活函数，就像大脑里判断神经元是否被激活起作用一样，激活函数需要是非线性的
+$L(\mu_1,\Sigma_1)=\prod_{i=1}^nP(x|y=1)=\prod_{i=1}^n\frac{\exp \left(-\frac{1}{2}(\mathbf{x^{(i)}}-\boldsymbol{\mu_1})^{\mathrm{T}} \mathbf{\Sigma_1}^{-1}(\mathbf{x^{(i)}}-\boldsymbol{\mu_1})\right)}{\sqrt{(2 \pi)^{d}|\mathbf{\Sigma_1}|}}$
 
-# 参数估计
+取对数似然：
 
-有了模型，接下来需要根据给定的数据找出最优的权重$w$，使得超平面完美地将正类和负类分隔开，和线性回归、逻辑回归一样，我们需要通过最小化一个损失函数来寻找理想的权重，怎么去定义这个损失函数呢？
+$\begin{aligned} l(\mu_1,\Sigma_1)=& \sum_{i=1}^{n} \log \left[\frac{1}{\sqrt{(2 \pi)^{d}|\Sigma_1|}} e x p\left(-\frac{1}{2}\left(x^{(i)}-\mu_{1}\right)^{\top} \Sigma_1^{-1}\left(x^{(i)}-\mu_{1}\right)\right]\right.\\=& \left.\sum_{i=1}^{n}\left[\log \sqrt{(2 \pi)^{d}\left|\Sigma_1\right|}-\frac{1}{2}\left(x^{(i)}-\mu_{1}\right)^{\top} \Sigma_1^{-1}\left(x^{(i)}-\mu_{1}\right)\right)\right] \end{aligned}$
 
-1. 直觉上可以选择误分类点的个数，因为误分类点越多，误差就越大，我们希望误分类点的数量越少越好。但是这样的函数既不是凸函数，不能直接令其一阶导数为0求最值的方法求参数；而且其对于$w$也不可导，不能通过梯度下降的方法求参数，所以不可行。
-2. 将误分类点个数这个离散的量转化为一个连续变化的量，可以用误分类点到超平面的总距离作为衡量标准，这样来得到损失函数$J(w)$
+令偏导$\frac{\partial}{\partial\mu_1}l(\mu_1,\Sigma_1)=0$，得到$\mu_1=\frac{\sum_{i=1}^nx^{(i)}}{n}$
 
-***怎么判断是否是误分类点？***
+令偏导$\frac{\partial}{\partial\Sigma_1}l(\mu_1,\Sigma_1)=0$，得到$\Sigma_1=\frac{\sum_{i=1}^n (x-\mu_1)^T(x-\mu_1)}{n}$
 
-对于误分类的点，有两种情况：
+同理可以得到$\mu_0, \Sigma_0$
 
-本来是正例，模型判断为负例（False Negative）：当$y=1$时，$w^Tx<0$
+这样，我们就能通过比较新样本分别属于两个类别的概率来进行分类了
 
-本来是负例，模型判断为正例（False Positive）：当$y=-1$时，$w^Tx>=0$
+但是这样计算出的参数有一个问题，就是没有考虑样本类别不均匀的情况，当一个类别的样本远大于另一个类别时，需要考虑两类样本出现概率的影响，于是我们结合贝叶斯公式来进一步优化，得到最终的高斯判别分析模型。
 
-综合起来则有$y(w^Tx)<0$，当满足这个条件时为误分类点。
+## 高斯判别分析推导
 
-***怎么计算误分类点到超平面的距离？***
+我们假设两个类别特征满足的高斯分布拥有相同的协方差矩阵，并假设样本标签符合伯努利分布
 
-对于任意点来说，它到超平面$w^Tx=0$的距离$d=\frac{\left|w * x_{0}+b\right|}{\|w\|}$
+则$P(y=1)=\phi$，$P(y=0)=1-\phi$
 
-其中$\|w\|=\sqrt{w_{1}^{2}+w_{2}^{2}+\ldots+w_{n}^{2}}$$（L_2范数）$
+综合起来有$P(y)=\phi^{y}+(1-\phi)^{1-y}$
 
-则单个误分类的点到平面的距离$d=\frac {-y(w^Tx)}{\|w\|}$
+根据贝叶斯公式：
 
-所有误分类的点到平面的距离，即$J(w)=\frac 1 {\|w\|} \sum_{i=1}^m-y^{(i)}(w^Tx^{(i)})$
+$P(y|x)=\frac{P(x|y)P(y)}{P(x)}$
 
-考虑梯度下降法，权重的更新规则为$w_k=w_k-\alpha \frac {\partial J(w)}{\partial w_k}$
+我们想要最大化$P(y|x)$，但实际上只用最大化$P(x|y)P(y)$即可，根据最大似然估计
 
-为了方便计算梯度，我们**不考虑**$\frac 1 {\|w\|}$来进行求导
+$\begin{aligned}
+l&=logL(\phi,\mu_1,\mu_0,\Sigma)\\&=\sum_{i=1}^{m} \log \left(p\left(x^{(i)} \mid y^{(i)}=1 ; \mu_{1}, \Sigma\right)^{y^{(i)}} \cdot p\left(x^{(i)} \mid y^{(i)}=0 ; \mu_{0}, \Sigma\right)^{1-y^{(i)}}\right)+\sum_{i=1}^{m} \log p\left(y^{(i)} ; \phi\right) \\&=\sum_{i=1}^{m} y^{(i)} \log p\left(x^{(i)} \mid y^{(i)}=1 ; \mu_{1}, \Sigma\right)+\sum_{i=1}^{m}\left(1-y^{(i)}\right) \log p\left(x^{(i)} \mid y^{(i)}=0 ; \mu_{0}, \Sigma\right)+\sum_{i=1}^{m} \log p\left(y^{(i)};\phi\right)
+\end{aligned}$代入
 
-$\frac {\partial J(w_)}{\partial w_k}=\sum_{i=1}^m -y_k^{(i)}x_k^{(i)}$
+$p(x|y=1)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_1})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_1})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}$
 
-采用随机梯度下降，每次只用一个样本来进行权重更新
+$p(x|y=0)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_0})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_0})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}$
 
-$w_k=w_k+\alpha y_k^{(i)}x_k^{(i)}$
+$p(y)=\phi^{y}+(1-\phi)^{1-y}$
 
-更新权重，直到所有的点都被正确分类
+并分别令四个参数的偏导数等于0，可以求出
 
-***问题***
+$\begin{aligned}\phi &=\frac{1}{m} \sum_{i=1}^{m} 1\left\{y^{(i)}=1\right\} \\\mu_{0} &=\frac{\sum_{i=1}^{m} 1\left\{y^{(i)}=0\right\} x^{(i)}}{\sum_{i=1}^{m} 1\left\{y^{(i)}=0\right\}} \\\mu_{1} &=\frac{\sum_{i=1}^{m} 1\left\{y^{(i)}=1\right\} x^{(i)}}{\sum_{i=1}^{m} 1\left\{y^{(i)}=1\right\}} \\\Sigma &=\frac{1}{m} \sum_{i=1}^{m}\left(x^{(i)}-\mu_{y^{(i)}}\right)\left(x^{(i)}-\mu_{y^{(i)}}\right)^{T}\end{aligned}$
 
-- 为什么可以不考虑$\frac {1} {\|w\|}$来求梯度？
-  
-    我们关注的是减小损失函数，直到其为0（没有误分类点），$\frac {1} {\|w\|}$并不改变收敛的方向，所以只要存在误分类点，损失函数一定会朝着0的方向减小，直到最终误分类点的个数为，所以去除这一项求导不影响最终的结果。
-    
-- 随机梯度下降中，权重更新多少次，怎么确定什么时候更新？
-  
-    遍历数据，如果$y(w^Tx)<0$，就对$w$进行更新，遍历完后如果还有误分类点再重新遍历，一共出现多少次误分类点，就更新多少次权重
-    
+有了这些参数，预测时，只需用贝叶斯公式计算$P(y|x)$即可。
 
-更新过程，以二维数据为例，初始化权重，$w_0=w_1=w_2=0$，此时全部预测为正例
+# 线性分界性质
 
-![Untitled](images/README/Untitled-16436857120044.png)
+![Untitled](images/README/Untitled-164377758712715.png)
 
-遍历所有的数据，遇到有第一个负例没有被正确分类，更新权重，调整w的值使分离超平面向该误分类点的一侧移动一点
+观察一维特征的样本分类情况，我们发现存在一个点，使得数据在两个高斯分布中的概率相等
 
-![Untitled](images/README/Untitled-16436857236655.png)
+![Untitled](images/README/Untitled-164377759785816.png)
 
-继续遍历数据，遇到没正确分类的点就更新函数，直到遍历完所有点
+观察二维特征的样本分布情况（俯视图），我们也发现有的数据在两个高斯分布中的概率相等，而且那这些概率相等的点会不会都在同一条直线上呢？
 
-![Untitled](images/README/Untitled-16436857426636.png)
+推广到多维特征的的情况，概率相等的点会不会都在同一个线性超平面上呢？
 
-这时如果还没有得到完美分类的超平面（直线），就再次遍历所有数据，重复更新步骤，直到完美分类为止
+答案是肯定的，证明如下：
 
-![Untitled](images/README/Untitled-16436857594937.png)
+$P(x|y=1)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_1})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_1})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}$
 
-满足条件的超平面不一定只有一个，比如上图中就可以有多条直线可以将正例和负例完美分类，难以直接找到最完美的分类超平面 。
+$P(x|y=0)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_0})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_0})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}$
 
-注：当我们提到“感知机”当时候，一般是指上面的这种“单层感知机”（Single-layer Perceptron），实际上是一个单神经元的使用Sign函数作为激活函数的神经网络，数据经过加权求和以及激活函数直接得到输出。
+数据在两个高斯分布中的概率相等，即
 
-# 缺点
+$P(x|y=1)P(y=1)=P(x|y=0)P(y=0)$
 
-感知机在现实实际场景中应用比较少，它只有一个神经元，不能表达复杂的模型，**不能解决线性不可分的问题（比如下图，无法找到一个超平面（直线）能完全将两个类完全分离。**
+$\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_1})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_1})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}\phi=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu_0})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu_0})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}}(1-\phi)$
 
-![Untitled](images/README/Untitled-16436857724778.png)
+化简后得到
 
-如何去改进感知机，使其能够解决线性不可分的问题？
+$-2\left(\mu_{0}^{\top}-\mu_{1}^{\top}\right) \Sigma^{-1} x=2 \log (1-\phi)-2 \log (\phi)+\mu_{1}^{\top} \Sigma^{-1} \mu_{1}-\mu_{1}^{\top} z^{-1} \mu_{0}$
 
-1. 使用核方法。
-2. 使用多个神经元，转化为多层感知机（Multi-layer Perceptron），即前馈神经网络。
+其中$-2\left(\mu_{0}^{\top}-\mu_{1}^{\top}\right) \Sigma^{-1}$ 、$2 \log (1-\phi)-2 \log (\phi)+\mu_{1}^{\top} \Sigma^{-1} \mu_{1}-\mu_{1}^{\top} z^{-1} \mu_{0}$都为常数，
+
+所以可以简化为$ax+b=0$的形式，即$x$在一个线性超平面上。
+
+注：超平面是线性的前提是我们假设两个分类的特征满足的高斯分布拥有相同的方差
+
+# 假设条件
+
+总结一下，高斯判别分析中需要满足的假设有
+
+1. 样本标签服从概率为$\phi$的伯努利分布
+2. 两个类别的样本特征满足高斯分布，而且它们的协方差矩阵相同
+
+# 高斯判别分析与逻辑回归
+
+从计算的角度看：
+
+与逻辑回归相比，高斯判别分析的计算更为快速，可以直接计算参数，而逻辑回归需要使用梯度下降训练出最佳的参数。
+
+从假设的角度看：
+
+逻辑回归中需要满足的假设有
+
+1. 样本标签服从概率为$\phi$的伯努利分布 
+2. $P(y=1|x)$满足sigmoid函数
+
+实际上，通过高斯判别分析求得参数后，使用贝叶斯公式，我们同样可以得到：
+
+$P(y=1|x)=\frac{1}{1+e^{-w^Tx}}$
+
+不仅如此，如果假设样本特征分别满足柏松分布，我们也得到：
+
+$P(y=1|x)=\frac{1}{1+e^{-w^Tx}}$
+
+而通过$P(y=1|x)=\frac{1}{1+e^{-w^Tx}}$，无法反推样本特征属于什么分布。所以，高斯判别分析的假设条件比逻辑回归更严格，可以把高斯判别分析的假设看作逻辑回归的一种特殊情况。
+
+从性能的角度看：
+
+在数据特征满足高斯分布时高斯判别分析能够有更好的效果，但不满足这个条件时时逻辑回归会有更有更好的效果；
+
+在数据量较小时高斯判别分析能够有更好的效果，但数据量较大逻辑回归会有更有更好的效果。
