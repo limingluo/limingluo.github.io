@@ -2,8 +2,8 @@
 
 汤姆·米切尔对机器学习的定义：
 
-Well-posed Learning Problem: A computer program is said to  learn from experience E with respect to some task T and some performance measure P, if its performance on T as measured by P, improves with experience E. - Tom Mitchell (1998). 
-假设用 P 来评估计算机程序 在某任务类 T 上的性能， 若一个程序通过利用经验 E 在 T 中任务丰获得了性 能改善，则我们就说关于 T 和 P， 该程序对 E 进行 了学习
+- Well-posed Learning Problem: A computer program is said to  learn from experience E with respect to some task T and some performance measure P, if its performance on T as measured by P, improves with experience E. - Tom Mitchell (1998). 
+- 假设用 P 来评估计算机程序 在某任务类 T 上的性能， 若一个程序通过利用经验 E 在 T 中任务丰获得了性 能改善，则我们就说关于 T 和 P， 该程序对 E 进行 了学习
 
 ![whatisml](images/README/whatisml.png)
 
