@@ -56,7 +56,7 @@ $$ \begin{aligned} \frac {\partial E_{(w,b)}}{\partial w} &= \sum_{i=1}^{m}[2x_i
 
 $$ 2w\sum_{i=1}^mx_i^2+(b-y_i)\sum_{i=1}^mx_i=0\\ 2w\sum_{i=1}^mx_i^2=(y_i-b)\sum_{i=1}^mx_i $$
 
-将$E_{(w,b)}$对$w$进行求导，得到
+将$E_{(w,b)}$对$b$进行求导，得到
 
 $$ \begin{aligned} \frac {\partial E_{(w,b)}}{\partial b} &= \sum_{i=1}^{m}[2(wx_i+b-y_i)]\\ &=2(\sum_{i=1}^{m}wx_i+\sum_{i=1}^{m}b-\sum_{i=1}^{m}y_i)\\ &=2(\sum_{i=1}^{m}wx_i+mb-\sum_{i=1}^{m}y_i) \end{aligned} $$
 
