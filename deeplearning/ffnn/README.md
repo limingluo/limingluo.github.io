@@ -69,11 +69,9 @@ x^{(1)} & x^{(2)} & \cdots & x^{(m)} \\
 
 ### 模型架构
 
-我们使用下图的前馈神经网络结构。
-
 ![untitled](images/README/untitled-16443275591742.png)
 
-其中隐藏层和输出层的激活函数均使用$Sigmoid$函数，这个模型看起来就像是很多个逻辑回归模型叠加起来。
+其中隐藏层和输出层的激活函数根据数据分布和任务类型选择，比如上图的神经网络的激活函数均为Sigmoid，看起来就像是很多个逻辑回归模型叠加起来。
 
 在每个神经元中，都经历了一次线性计算加上一次$Sigmoid$计算，输出$a$并传入到下一层中。
 
@@ -83,7 +81,7 @@ x^{(1)} & x^{(2)} & \cdots & x^{(m)} \\
 
 第$l$层的整体权重为$W^{[l]}$，每层中矩阵$W$的形状取决于上一层中输出$A$（或$X$）的形状以及当前层中神经元的个数，形状为(当前层数, 上一层数)，数值可以随机初始化，然后通过反向传播得到最终的值。
 
-比如对于这个图中的神经网络，
+比如对于上图中的神经网络，
 
 第0层（输入层）共有d个特征，所以输入的每个样本的矩阵$x^{[i]}$形状为$(d, 1)$，整个训练集的输入$X$的形状为$(d, m)$；
 
@@ -91,13 +89,69 @@ x^{(1)} & x^{(2)} & \cdots & x^{(m)} \\
 
 第2层中$W{[2]}$的形状为$(2, 3)$，2来自于第2层中神经元的个数，$3$来自于第1层中的神经元个数，$b^{[2]}$的形状为$(2, 1)$，2来自于第1层中神经元的个数，这样该层输出$z^{[2]}$和$a^{[2]}$的形状为$(2,1)$，$Z^{[1]}$和$A^{[1]}$的形状为$(2, m)$；
 
-第3层（输出层）中$W^{[3]}$的形状为$(1, 2)$，1来自于第3层中神经元的个数，$2$来自于第2层中的神经元个数，$b^{[3]}$的形状为$(1, 1)$，1来自于第3层中神经元的个数，这样该层输出$z^{[3]}$和$a^{[3]}$的形状为$(1,1)$，$a^{[3]}$也就是最终预测的结果$\hat{y}$，$Z^{[1]}$和$A^{[1]}$的形状为$(1, m)$。
+第3层（输出层）中$W^{[3]}$的形状为$(1, 2)$，1来自于第3层中神经元的个数，$2$来自于第2层中的神经元个数，$b^{[3]}$的形状为$(1, 1)$，1来自于第3层中神经元的个数，这样该层输出$z^{[3]}$和$a^{[3]}$的形状为$(1,1)$，$a^{[3]}$也就是最终预测的结果$\hat{y}$，$Z^{[1]}$和$A^{[1]}$的形状为$(1, m)$
+
+接下来的我们通过代码构建一个L层的深度前馈神经网络，在隐藏层全部使用Relu激活函数，输出层使用Sigmoid激活函数。
+
+```python
+# 初始化参数函数，输入神经网络的层数、神经元信息，输出初始化后的权重和偏置
+def initialise_parameters(layer_dims): # layer_dims = [输入层特征数，第一层神经元数，第二层神经元特征数...，输出层特征数]，表现出每层有多少神经元
+    L = len(layer_dims) # 计算神经网络一共多少层
+    parameters = {} # 创建参数字典，存储各参数的值
+
+    for l in range(1, L):
+        parameters["W" + str(l)] = np.random.randn(layer_dims[l] , layer_dims[l-1]) * 0.01 # 计算各层权重的值并存储在parameters中
+        parameters["b" + str(l)] = np.random.randn(layer_dims[l], 1) # 计算各层偏置的值并存储在parameters中
+    return parameters
+```
 
 ## 正向传播
 
-对于每个样本，正向计算过程如下
+假设是一个三层的神经网络，$layer\_dims=(d,3,2,1)$对于每个样本，正向计算过程如下：
 
 ![111](images/README/111.png)
+
+```python
+# 定义两个激活函数
+
+def sigmoid(Z):   
+    A = 1/(1+np.exp(-Z))  
+    return A
+
+def relu(Z):
+    
+    A = np.maximum(0,Z)
+    
+    return A
+
+# 前向传播函数。输入训练数据X和参数W、b，计算后输出预测值以及中间产生的输出，以用于反向传播
+def forward_propagation(X, parameters):
+    caches = {} # 数组caches，存储前向传播过程中产生的中间输出
+    L = len(parameters) // 2 # 因为parameters里包括隐藏层和输出层的W和b，长度除以二就能得到神经网络层数
+    caches["A0"] = X # 先存入输入的数据X
+    for l in range(1, L):
+        A = caches["A" + str(l - 1)] 
+        caches["Z" + str(l)] = np.dot(parameters["W"+str(l)], A) + parameters["b"+str(l)] # 计算进入下一层时线性函数的结果Z并存储
+        caches["A" + str(l)] = np.maximum(caches["Z" + str(l)], 0) # 计算上一层的输出A并存储
+        #print(caches["A" + str(l)].shape)
+    ZL = np.dot(parameters["W"+str(L)], caches["A" + str(L-1)]) + parameters["b"+str(L)]
+    Y_hat = sigmoid(ZL) # 得到输出层的数据，也就是预测值
+    return Y_hat, caches
+```
+
+## 计算损失
+
+通过用现在的参数进行前向传播，我们计算出了预测值$\hat Y$，于是可以通过代价函数计算损失。
+
+$J = -\frac{1}{m} \sum_{i=1}^{m}\left(y^{(i)} \log \left(\hat{y}^{(i)}\right)+\left(1-y^{(i)}\right) \log \left(1-\hat{y}^{(i)}\right)\right)$
+
+````python
+def compute_cost(Y, Y_hat):
+    m = Y.shape[1] # 计算总样本数
+    cost = - 1 / m * (np.dot(np.log(Y_hat), Y.T) + np.dot(np.log(1-Y_hat), (1-Y).T)) # 计算损失
+    cost = np.squeeze(cost) # 确保损失为一维形状
+    return cost
+````
 
 
 
@@ -163,15 +217,12 @@ $\begin{aligned}
 &=(a^{[3]}-y)W^{[3]}
 \end{aligned}$
 
-根据$a^{[2]}=\sigma(z^{[2]})=\frac{1}{1+e^{-z^{[2]}}}$，有：
+根据$a^{[2]}=ReLu(z^{[2]})=max(z^{[2]},0)$，有：
 
-$\begin{aligned}
-\frac{\partial a^{[2]}}{\partial z^{[2]}}
-&=a^{[2]}(1-a^{[2]})
-\end{aligned}$
+
 
 则：$\begin{aligned}
-\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} &=\end{aligned}(a^{[3]}-y)W^{[3]} \cdot a^{[2]}(1-a^{[2]})$
+\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} &=\end{aligned}(a^{[3]}-y)W^{[3]} \cdot ReLu\_backward(Z^{[2]})$
 
 
 
@@ -181,128 +232,111 @@ $\begin{aligned}
 
 $\begin{aligned}
 \frac{\partial L(y, \hat{y})}{\partial W^{[2]}} &=\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} \cdot \frac{\partial z^{[2]}}{\partial W^{[2]}}\\&=\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} \cdot a^{[1]}\\
-&=(a^{[3]}-y)W^{[3]} \cdot a^{[2]}(1-a^{[2]}) \cdot a^{[1]}
+&=(a^{[3]}-y)W^{[3]} \cdot ReLu\_backward(Z^{[2]})\cdot a^{[1]}
 \end{aligned}$
 
 $\begin{aligned}
 \frac{\partial L(y, \hat{y})}{\partial b^{[2]}} &=\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} \cdot \frac{\partial z^{[2]}}{\partial b^{[2]}}\\
-&=\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} \\&=(a^{[3]}-y)W^{[3]} \cdot a^{[2]}(1-a^{[2]})
+&=\frac{\partial L(y, \hat{y})}{\partial z^{[2]}} \\&=(a^{[3]}-y)W^{[3]} \cdot ReLu\_backward(Z^{[2]})
 \end{aligned}$
 
 以此类推，可以得到$\frac{\partial L(y, \hat{y})}{\partial W^{[1]}} $和$\frac{\partial L(y, \hat{y})}{\partial b^{[1]}} $
+
+规律是 
+
+$dW^{[l]}=np.dot(dZ^{[l]},A^{[l-1]}.T)/m$
+
+$db^{[l]} = np.sum(d^{[Z]},axis=1)/m$
+
+$dA^{[l-1]} = np.dot(dW^{[l]}.T, dZ^{[l]})$
+
+$dZ^{[l-1]} = dA^{[l-1]}*ReLu\_backward(Z^{[l-1]})$
+
+```python
+def sigmoid_backward(dA, Z):
+    
+    s = 1/(1+np.exp(-Z))
+    dZ = dA * s * (1-s)
+    
+    return dZ
+
+def relu_backward(dA, Z):
+    dZ = np.array(dA, copy=True) 
+    dZ[Z <= 0] = 0
+    return dZ
+
+def backward_propagation(Y_hat, Y, caches, parameters):
+    m = Y_hat.shape[1] # 神经网络层数
+    L = len(parameters) // 2
+    grads = {} # 存储中间产生的梯度的字典
+    grads["dZ"+str(L)] = Y_hat - Y # 先存储关于输出层中Z的梯度
+    #print( grads["dZ"+str(L)].shape)
+    for l in range(L, 0,-1):
+
+        grads["dW" + str(l)] = 1/m * np.dot(grads["dZ"+str(l)], caches["A"+str(l-1)].T)
+        grads["db" + str(l)] = 1/m *  np.sum(grads["dZ"+str(l)], axis=1, keepdims=True)
+
+        if l > 1:
+            grads["dA" + str(l-1)] = np.dot(parameters["W"+str(l)].T, grads["dZ"+str(l)])
+            grads["dZ"+str(l-1)] =  relu_backward(grads["dA" + str(l-1)], caches["Z"+str(l-1)] )
+    return grads
+```
+
+
 
 ## 更新参数
 
 现在得到了损失函数$L(y,\hat{y})$关于各层中$W$和$b$的导数，就可以通过梯度下降$W=W-\alpha \frac{\partial L(y,\hat{y})}{\partial W}W$以及$b=b-\alpha \frac{\partial L(y,\hat{y})}{\partial b}$迭代更新，最终得到最理想的参数，其中$\alpha$是学习速率，决定了更新的速度。
 
-## 参数
+```python
+def update_parameters(parameters, grads, learning_rate):
+    L = len(parameters) // 2 # 神经网络的总层数
+    for l in range(1, L + 1):
+        parameters["W"+str(l)] = parameters["W"+str(l)] - learning_rate * grads["dW"+str(l)]
+        parameters["b"+str(l)] = parameters["b"+str(l)] - learning_rate * grads["db"+str(l)]
 
-### 参数与超参数
+    return parameters
+```
 
-1. 参数 parameter
 
-​	参数是模型内部的配置变量，是可以根据数据学习出的变量，比如神经网络中的权重、偏差等，在进行预测的时候需要用到参数的值。
 
-2. 超参数 hyperparameter
+## 训练架构
 
-​	模型超参数是模型外部的配置，是不能根据数据学习出的，比如神经网络中的学习速率、迭代次数、隐藏层层数、隐藏神经元个数等，设置不同的超参数会产生不同的模型，得到不同的模型表现。
+传入输入特征、输入标签、神经网络结构、迭代次数、学习率，经过参数初始化以及很多次的前向传播、计算损失、反向传播、更新参数后，最终返回训练后的参数用于预测。
 
-### 参数/超参数初始化
+```python
+def dnn_model(X, Y, layer_dims, iterations, learning_rate):
+    parameters = initialise_parameters(layer_dims) # 初始化参数
+    np.random.seed(1)
+    for i in range(iterations):
+        Y_hat, caches = forward_propagation(X, parameters) # 前向传播
+        cost = compute_cost(Y, Y_hat) # 计算损失
+        if i % 100 == 0:
+            print("第", i, "次迭代的损失：", cost)
+        grads = backward_propagation(Y_hat, Y, caches, parameters) # 反向传播
+        parameters = update_parameters(parameters, grads, learning_rate) # 更新参数
+    return parameters
+```
 
-1. 参数——权重和偏置
+## 预测
 
-在逻辑回归算法（相当于单个神经元）中，初始化参数$W$和$b$时我们可以全部都赋予0的值，最终也能训练出一个较好的参数，但在神经网络中缺不能草率地将所有参数全部初始化为0。
+获得训练好的参数后，我们可以预测训练集、测试集的数据，看看是否与已有标签的差距，计算精度等。
 
-因为这样的话，同一层的每个神经元的初始权重都为0，在反向传播的时候，因为导数的值都一样，所以每个权重更新变化的值都一样，同一层中权重一直是相等的，那么我们想让每个神经元表现出不同数据特征的目的也没达到，等同于只使用一个神经元。
+```python
+# 预测函数
+def predict(parameters, X):
+    # 传入训练好的参数以及测试集的特征
+    Y_hat,caches = forward_propagation(X, parameters) # 前向传播以得到预测值Y_hat
+    predictions =  Y_hat  > 0.5 # 如果预测概率大于0.5输出1（狗），否则输出0（猫）
+    (np.dot(train_y, predictions.T) + np.dot(1 - train_y, (1 - predictions).T)) / float(train_y.size)
+    return predictions #返回预测的值
+        
+    return p
 
-一般来说，在神经网络中会把各层的$W$随机初始化为很小的值，$b$初始化为0。
+# 计算精度Accuracy函数
+def accuracy(Y_hat, Y):
+    accuracy = (np.dot(Y, Y_hat.T) + np.dot(1 - Y, (1 - Y_hat).T)) / float(Y.size) * 100
+    accuracy = float(accuracy)
+    return accuracy
+```
 
-- 为什么要把$W$初始化为很小的值？
-
-  如果$W$的初始值很大的化，$z=W^Tx+b$也会很大，对于一些激活函数，如
-
-  在Sigmoid函数$a=\sigma(z)$中，自变量$z$很大，导数在这个位置就会很小，梯度下降的速率会变得很慢，因而需要更多次的迭代才能训练出理想的参数。
-
-- Python中比较常用的初始化：`np.random.randn((row,column))*0.01`
-
-2. 超参数
-
-​	超参数的选择一般是基于不断试错，尝试多种不同的超参数组合，然后训练出不同的模型后比较表现，积累经验，选出最优的组合
-
-## 激活函数
-
-### 激活函数是什么？
-
-作为神经网络中不可缺少的一部分，激活函数被应用在隐藏层和输出层中。隐藏层中的激活函数影响了神经网络学习的速度和效果，输出层中的激活函数据决定了模型输出的数据是什么样子。
-
-在上面的图像二分类问题中，我们需要的输出是一个0-1之间的概率，所以$Sigmoid$成为输出层中一个理想又自然的激活函数，在隐藏层中我们也选择了$Sigmoid$函数，但实际上对于这个问题还有更好的选择。
-
-### 为什么我们需要激活函数？
-
-我们使用神经网络的出发点就是多添加参数使得模型能够解决复杂问题，而激活函数需要是非线性函数，使用它们的话可以增加模型的复杂性，不使用激活函数的话，不管神经网络有多少层，每层有多少神经元，最终其实就**等价于一个线性回归模型**。在神经网络中，选取适合的激活函数对于模型最终表现的影响是巨大的，针对不同的问题需要使用不同的激活函数，在同一个模型中对于不同的部分也会使用多种不同的激活函数。
-
-### 激活函数的条件
-
-激活函数一般需要是非线性的，满足可求导性和单调性
-
-一般来说，神经网络的所有隐藏层中都会使用同一种激活函数，输出层需要根据输出数据的特征来选择合适的输出函数。
-
-### 主流激活函数
-
-1. Sigmoid函数 $\sigma(z)=\frac {1} {1+e^{-z}}$
-
-    ![sigmoid_function](images/README/sigmoid_function.png)
-
-    输出范围为(0,1)
-
-    优点：简单，适合输出用概率表示的分类问题
-
-    缺点：当z太大或太小时，函数的导数接近0，梯度下降的更新过程会很慢
-
-    对于二分类问题的输出层，Sigmoid函数是一个不错的选择，但不适合作为隐藏层中的激活函数，$tanh$和$Relu$是更好的选择
-
-2. Tanh函数 $tanh(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}$
-
-    ![tanh activation function-new](images/README/tanh activation function-new-16445492966351.png)
-
-    输出范围是(-1, 1)
-
-    优点：适用于分类问题，特别是需要对负类进行惩罚时
-
-    缺点：当z太大或太小时，函数的导数接近0，梯度下降的更新过程会很慢
-
-3. ReLU（Rectified Linear Unit）函数  $ReLU(z)=max(z, 0)$
-
-    ![relu_3](images/README/relu_3.png)
-
-    最常用的激活函数，范围是[0, infinity]
-
-    优点：z太大时，输出值也变大，梯度更新相对快
-
-    缺点：输入的负值会输出为0，降低了负输入值对模型的影响力
-
-4. Softmax函数
-
-    $Softmax(z) = \frac{{e^z}^i}{\sum{{e^z}^i}}$ 
-
-    一般用在输出层的激活函数，预测多分类问题，输出一个和为1的概率分布
-
-### 如何选择激活函数
-
-激活函数的选取需要基于问题的特征和输出，进行多种不同的组合搭配来得出最优的选择。基于经验，下面是一些常用激活函数的选择参考。
-
-- 对于隐藏层
-  - 当使用前馈神经网络时，一般使用ReLU函数
-  - 当使用卷积神经网络时，一般使用ReLU函数
-  - 当使用循环神经网络时，一般使用Tanh或Sigmoid函数
-- 对于输出层
-  - 当遇到二分类问题时，一般使用Sigmoid函数
-  - 当遇到多分类问题时，一般使用Softmax函数
-  - 当遇到多标签问题时，一般使用Sigmoid函数
-  - 当遇到回归问题时，一般直接使用线性函数
-
-补充：
-
-- 二分类（Binary Classification）：假设两个分类相互独立，在两个分类中将样本判断为其中一个，是二选一的问题，比如判断一个人是否患有新冠肺炎，输出为“患有”和“不患有“
-- 多分类（Multi-class Classification）：假设多个分类相互独立，在多个分类中将样本判断其中一个，是多选一的问题，比如判断一张图片上的动物是什么（可能是老虎、狮子、猎豹、豺狼中的一种）
-- 多标签分类（Multi-label Classification）：假设某些分类不相互独立，每个样本可以预测为一个或多个类别，是多选多的问题，比如给Steam上的一款游戏进行分类，可能同时会贴上“多人游戏”、“RPG”、“支持手柄”、“Windows平台“的标签
