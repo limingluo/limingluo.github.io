@@ -1,9 +1,6 @@
 # 神经网络优化
-在构建神经网络模型的过程中，超参数的选取是十分重要的，隐藏层个数、神经元个数、学习速率、激活函数等等因素都会影响模型最终的表现，我们需要不断地实验和验证来决定理想的超参数设定。
 
-除此之外，在构建深度学习模型的过程中还有很多技巧可以使得训练更容易、模型的表现更好。
-
-
+对应的Jupyter Notebook文件，在 [Improving Neural Networks](https://github.com/limingluo/limingluo.github.io/blob/main/deeplearning/notebooks/Improving-Neural-Networks.ipynb)    [下载到本地](https://limingluo.github.io/deeplearning/notebooks/Improving-Neural-Networks.ipynb)
 
 ## 参数
 
